@@ -87,22 +87,62 @@ Rect.prototype.overlaps = function( rect ) {
  * @param {Rect} rect - the overlapping rect
  * @returns {Array} freeRects - rects representing the area around the rect
 **/
-Rect.prototype.getMaximalFreeRects = function( rect ) {
-
-  // if no intersection, return false
-  if ( !this.overlaps( rect ) ) {
-    return false;
-  }
+Rect.prototype.getMaximalFreeRects = function( rect, minY ) {
 
   var freeRects = [];
   var freeRect;
+
+  this.x = Math.round(this.x);
+  this.y = Math.round(this.y);
+  rect.x = Math.round(rect.x);
+  rect.y = Math.round(rect.y);
 
   var thisRight = this.x + this.width;
   var thisBottom = this.y + this.height;
   var rectRight = rect.x + rect.width;
   var rectBottom = rect.y + rect.height;
 
+  // if no intersection, return original
+  if ( !this.overlaps( rect ) ) {
+    if ( this.y < rect.y ) {
+      return [];
+    } else {
+      if ( thisRight <= rect.x ) {
+        // left
+        if (this.y > rect.y && this.y < rectBottom) {
+          freeRect = new Rect({
+            x: this.x,
+            y: this.y,
+            width: this.width,
+            height: rectBottom - this.y
+          });
+          freeRects.push( freeRect );
+        } else {
+          freeRects.push( this );
+        }
+      } else if ( this.x >= rectRight ) {
+        // right
+        if (this.y > rect.y && this.y < rectBottom) {
+          freeRect = new Rect({
+            x: this.x,
+            y: this.y,
+            width: this.width,
+            height: rectBottom - this.y
+          });
+          freeRects.push( freeRect );
+        } else {
+          freeRects.push( this );
+        }
+      } else if ( this.y >= rectBottom ) {
+        // bottom
+        freeRects.push( this );
+      }
+      return freeRects
+    }
+  }
+
   // top
+  /*
   if ( this.y < rect.y ) {
     freeRect = new Rect({
       x: this.x,
@@ -112,8 +152,10 @@ Rect.prototype.getMaximalFreeRects = function( rect ) {
     });
     freeRects.push( freeRect );
   }
+  */
 
   // right
+  /*
   if ( thisRight > rectRight ) {
     freeRect = new Rect({
       x: rectRight,
@@ -123,19 +165,42 @@ Rect.prototype.getMaximalFreeRects = function( rect ) {
     });
     freeRects.push( freeRect );
   }
+  */
+  //console.log(this)
+  //console.log(rect)
+  if ( thisRight > rectRight ) {
+    if (this.y <= rect.y) {
+      freeRect = new Rect({
+        x: rectRight,
+        y: rect.y,
+        width: thisRight - rectRight,
+        height: this.height
+      });
+      freeRects.push( freeRect );
+    } else if (this.y > rect.y && this.y < rectBottom) {
+      freeRect = new Rect({
+        x: rectRight,
+        y: rectBottom,
+        width: thisRight - rectRight,
+        height: rectBottom - this.y
+      });
+      freeRects.push( freeRect );
+    } else {
+      freeRect = new Rect({
+        x: rectRight,
+        y: this.y,
+        width: thisRight - rectRight,
+        height: this.height
+      });
+      freeRects.push( freeRect );
+    }
 
-  // bottom
-  if ( thisBottom > rectBottom ) {
-    freeRect = new Rect({
-      x: this.x,
-      y: rectBottom,
-      width: this.width,
-      height: thisBottom - rectBottom
-    });
-    freeRects.push( freeRect );
+    //console.log('RIGHT')
+    //console.log(freeRect)
   }
 
   // left
+  /*
   if ( this.x < rect.x ) {
     freeRect = new Rect({
       x: this.x,
@@ -143,6 +208,64 @@ Rect.prototype.getMaximalFreeRects = function( rect ) {
       width: rect.x - this.x,
       height: this.height
     });
+    freeRects.push( freeRect );
+  }
+  */
+  if ( this.x < rect.x ) {
+    if ( this.y <= rect.y ) {
+      freeRect = new Rect({
+        x: this.x,
+        y: rect.y,
+        width: rect.x - this.x,
+        height: this.height
+      });
+      freeRects.push( freeRect );
+    } else if ( this.y > rect.y && this.y < rectBottom ) {
+      freeRect = new Rect({
+        x: this.x,
+        y: this.y,
+        width: rect.x - this.x,
+        height: rectBottom - this.y
+      });
+      freeRects.push( freeRect );
+    } else {
+      freeRect = new Rect({
+        x: this.x,
+        y: this.y,
+        width: rect.x - this.x,
+        height: this.height
+      });
+      freeRects.push( freeRect );
+    }
+
+
+    //console.log('LEFT')
+    //console.log(freeRect)
+  }
+
+  // bottom
+  /*
+  if ( thisBottom > rectBottom ) {
+    freeRect = new Rect({
+      x: this.x,
+      y: rectBottom,
+      width: this.width,
+      height: thisBottom - rectBottom
+    });
+    //console.log('BOTTOM')
+    //console.log(freeRect)
+    freeRects.push( freeRect );
+  }
+  */
+  if ( this.y <= rectBottom && thisBottom > rectBottom ) {
+    freeRect = new Rect({
+      x: this.x,
+      y: Math.max( minY, rectBottom, this.y ),
+      width: this.width,
+      height: thisBottom - rectBottom
+    });
+    //console.log('BOTTOM')
+    //console.log(freeRect)
     freeRects.push( freeRect );
   }
 

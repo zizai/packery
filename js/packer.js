@@ -77,9 +77,16 @@ Packer.prototype.placeInSpace = function( rect, space ) {
 // update spaces with placed rect
 Packer.prototype.placed = function( rect ) {
   // update spaces
+  var minY = 0;
   var revisedSpaces = [];
+
+  //console.log(rect)
+  //console.log(this.spaces)
   for ( var i=0, len = this.spaces.length; i < len; i++ ) {
     var space = this.spaces[i];
+    var newSpaces = space.getMaximalFreeRects( rect, minY );
+    revisedSpaces.push.apply( revisedSpaces, newSpaces );
+    /*
     var newSpaces = space.getMaximalFreeRects( rect );
     // add either the original space or the new spaces to the revised spaces
     if ( newSpaces ) {
@@ -87,11 +94,14 @@ Packer.prototype.placed = function( rect ) {
     } else {
       revisedSpaces.push( space );
     }
+    */
   }
 
   this.spaces = revisedSpaces;
 
   this.mergeSortSpaces();
+  //this.spaces.sort( this.sorter );
+
 };
 
 Packer.prototype.mergeSortSpaces = function() {
